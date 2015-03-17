@@ -96,6 +96,32 @@
             </objects>
             <point key="canvasLocation" x="1175" y="616"/>
         </scene>
+        <!--View Controller-->
+        <scene sceneID="BFl-M2-tJb">
+            <objects>
+                <viewController id="sVd-cK-Jln" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="L4s-uj-sjp"/>
+                        <viewControllerLayoutGuide type="bottom" id="z0b-gp-D4O"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="agp-7C-uOx">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Accelerometer" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="mkM-sU-zVO">
+                                <rect key="frame" x="244" y="40" width="112" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="aAY-ba-3a8" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1295" y="1110"/>
+        </scene>
         <!--StatGPS Content View Controller-->
         <scene sceneID="VbT-88-wo4">
             <objects>
@@ -105,17 +131,17 @@
                         <viewControllerLayoutGuide type="bottom" id="piq-Ex-RGl"/>
                     </layoutGuides>
                     <view key="view" contentMode="scaleToFill" id="sud-5i-Q3L">
-                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <rect key="frame" x="0.0" y="0.0" width="500" height="150"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="GPS Accuracy" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="xEd-2n-NBj">
-                                <rect key="frame" x="244" y="35" width="112" height="21"/>
+                                <rect key="frame" x="194" y="32" width="112" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <segmentedControl opaque="NO" tag="10" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="3" translatesAutoresizingMaskIntoConstraints="NO" id="kLf-ms-BFd">
-                                <rect key="frame" x="126" y="64" width="349" height="29"/>
+                                <rect key="frame" x="76" y="61" width="349" height="29"/>
                                 <segments>
                                     <segment title="&gt;=3k"/>
                                     <segment title="&gt;=1k"/>
@@ -130,19 +156,21 @@
                         </subviews>
                         <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
                         <constraints>
-                            <constraint firstItem="xEd-2n-NBj" firstAttribute="top" secondItem="3It-v6-u0N" secondAttribute="bottom" constant="15" id="N3v-l6-CKb"/>
+                            <constraint firstItem="xEd-2n-NBj" firstAttribute="top" secondItem="3It-v6-u0N" secondAttribute="bottom" constant="12" id="N3v-l6-CKb"/>
                             <constraint firstAttribute="centerX" secondItem="kLf-ms-BFd" secondAttribute="centerX" constant="-0.5" id="RI0-5g-iRo"/>
                             <constraint firstItem="kLf-ms-BFd" firstAttribute="top" secondItem="xEd-2n-NBj" secondAttribute="bottom" constant="8" id="TQW-Ep-Utp"/>
                             <constraint firstAttribute="centerX" secondItem="xEd-2n-NBj" secondAttribute="centerX" id="bJB-mB-yCQ"/>
                         </constraints>
                     </view>
+                    <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+                    <size key="freeformSize" width="500" height="150"/>
                     <connections>
                         <outlet property="segAccuracy" destination="kLf-ms-BFd" id="a8L-mr-VOw"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="ipI-5l-ZNV" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1175" y="1165"/>
+            <point key="canvasLocation" x="687" y="885"/>
         </scene>
     </scenes>
 </document>

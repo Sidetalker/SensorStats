@@ -8,6 +8,7 @@
 
 import UIKit
 import CoreLocation
+import CoreMotion
 
 protocol StatContentDelegate {
     func changedLocationAccuracy(index: Int)
@@ -91,16 +92,42 @@ class StatGPSContentViewController: UIViewController {
 class StatTableViewController: UITableViewController, CLLocationManagerDelegate {
     
     var locationManager = CLLocationManager()
+    var motionManager = CMMotionManager()
     var lastLocation = CLLocation()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // Initialize the location manager
+        // Configure the location manager
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
         locationManager.requestAlwaysAuthorization()
         locationManager.startUpdatingLocation()
+        
+        // Configure the motion manager
+        // TODO: Hardware check
+        motionManager.gyroUpdateInterval = 0.1
+        motionManager.accelerometerUpdateInterval = 0.1
+        
+        // Configure update queues
+        let gyroQueue = NSOperationQueue.mainQueue()
+        let accQueue = NSOperationQueue.mainQueue()
+        
+        motionManager.startGyroUpdatesToQueue(gyroQueue) {
+            (data: CMGyroData!, error: NSError!) in
+            
+            if (error != nil) { println("Error: \(error)") }
+            
+            println(data)
+        }
+        
+        motionManager.startAccelerometerUpdatesToQueue(accQueue) {
+            (data: CMAccelerometerData!, error: NSError!) in
+            
+            if (error != nil) { println("Error: \(error)") }
+            
+            println(data)
+        }
     }
     
     override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
