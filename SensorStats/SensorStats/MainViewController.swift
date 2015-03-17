@@ -9,12 +9,98 @@
 import UIKit
 import CoreLocation
 
-class StatTableViewController: UITableViewController, UITableViewDelegate, UITableViewDataSource {
+protocol StatContentDelegate {
+    func changedLocationAccuracy(index: Int)
+}
+
+class StatPageViewController: UIPageViewController, UIPageViewControllerDataSource, UIPageViewControllerDelegate {
     
-    var locationManager: CLLocationManager!
+    var parent: StatViewController!
+    
+    let storyboardIDs = ["gpsPage"]
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        self.dataSource = self
+        self.delegate = self
+        
+        let initialVC = storyboard?.instantiateViewControllerWithIdentifier("gpsPage") as! StatGPSContentViewController
+        initialVC.delegate = parent
+        
+        self.setViewControllers([initialVC], direction: UIPageViewControllerNavigationDirection.Forward, animated: false, completion: nil)
+    }
+    
+    func pageViewController(pageViewController: UIPageViewController, viewControllerAfterViewController viewController: UIViewController) -> UIViewController? {
+        
+        var index = (viewController as! StatGPSContentViewController).index
+        index++
+        
+        if index >= storyboardIDs.count { return nil }
+        
+        return viewControllerAtIndex(index)
+    }
+    
+    func pageViewController(pageViewController: UIPageViewController, viewControllerBeforeViewController viewController: UIViewController) -> UIViewController? {
+        
+        var index = (viewController as! StatGPSContentViewController).index
+        index--
+        
+        if index < 0 { return nil }
+        
+        return viewControllerAtIndex(index)
+    }
+    
+    func viewControllerAtIndex(index : Int) -> UIViewController? {
+        if index == 0 {
+            if let contentVC = storyboard?.instantiateViewControllerWithIdentifier("gpsPage") as? StatGPSContentViewController {
+                contentVC.delegate = parent
+                
+                return contentVC
+            }
+        }
+        
+        return nil
+    }
+    
+    func presentationCountForPageViewController(pageViewController: UIPageViewController) -> Int {
+        return storyboardIDs.count
+    }
+    
+    func presentationIndexForPageViewController(pageViewController: UIPageViewController) -> Int {
+        return 0
+    }
+}
+
+class StatGPSContentViewController: UIViewController {
+    
+    @IBOutlet weak var segAccuracy: UISegmentedControl!
+    
+    var delegate: StatContentDelegate?
+    
+    var gpsAccuracyIndex = 1
+    var index = 0
+    
+    @IBAction func segToggled(sender: AnyObject) {
+        if let seg = sender as? UISegmentedControl {
+            delegate?.changedLocationAccuracy(seg.selectedSegmentIndex)
+        }
+    }
+}
+
+class StatTableViewController: UITableViewController, CLLocationManagerDelegate {
+    
+    var locationManager = CLLocationManager()
+    var lastLocation = CLLocation()
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        // Initialize the location manager
+        locationManager.delegate = self
+        locationManager.desiredAccuracy = kCLLocationAccuracyBest
+        locationManager.requestAlwaysAuthorization()
+        locationManager.startUpdatingLocation()
     }
     
     override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
@@ -23,7 +109,7 @@ class StatTableViewController: UITableViewController, UITableViewDelegate, UITab
     
     override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         if section == 0 {
-            return 1
+            return 8
         }
         
         return 0
@@ -39,14 +125,42 @@ class StatTableViewController: UITableViewController, UITableViewDelegate, UITab
     
     override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         if indexPath.section == 0 {
+            var cell = tableView.dequeueReusableCellWithIdentifier("statCell") as! UITableViewCell
+            
             if indexPath.row == 0 {
-                var cell = tableView.dequeueReusableCellWithIdentifier("statCell") as! UITableViewCell
-                
-                cell.textLabel?.text = "Stat"
-                cell.detailTextLabel?.text = "Num"
-                
-                return cell
+                cell.textLabel?.text = "Latitude"
+                cell.detailTextLabel?.text = "\(lastLocation.coordinate.latitude) degrees"
             }
+            else if indexPath.row == 1 {
+                cell.textLabel?.text = "Longitude"
+                cell.detailTextLabel?.text = "\(lastLocation.coordinate.longitude) degrees"
+            }
+            else if indexPath.row == 2 {
+                cell.textLabel?.text = "Altitude"
+                cell.detailTextLabel?.text = "\(lastLocation.altitude) meters"
+            }
+            else if indexPath.row == 3 {
+                cell.textLabel?.text = "Floor"
+                cell.detailTextLabel?.text = "\(lastLocation.altitude)"
+            }
+            else if indexPath.row == 4 {
+                cell.textLabel?.text = "Horizontal Accuracy"
+                cell.detailTextLabel?.text = "within \(lastLocation.horizontalAccuracy) meters"
+            }
+            else if indexPath.row == 5 {
+                cell.textLabel?.text = "Vertical Accuracy"
+                cell.detailTextLabel?.text = "within \(lastLocation.verticalAccuracy) meters"
+            }
+            else if indexPath.row == 6 {
+                cell.textLabel?.text = "Speed"
+                cell.detailTextLabel?.text = "\(lastLocation.speed) m/s?"
+            }
+            else if indexPath.row == 7 {
+                cell.textLabel?.text = "Course"
+                cell.detailTextLabel?.text = "\(lastLocation.course) degrees"
+            }
+            
+            return cell
         }
         
         return UITableViewCell()
@@ -55,98 +169,54 @@ class StatTableViewController: UITableViewController, UITableViewDelegate, UITab
     override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         tableView.deselectRowAtIndexPath(indexPath, animated: true)
     }
-}
-
-class StatPageViewController: UIPageViewController, UIPageViewControllerDataSource, UIPageViewControllerDelegate {
-    let titles = ["GPS", "Accelerometer", "Gyroscope"];
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        self.dataSource = self
-        self.delegate = self
-        
-        self.setViewControllers([StatContentViewController()], direction: UIPageViewControllerNavigationDirection.Forward, animated: false, completion: nil)
-    }
-    
-    func pageViewController(pageViewController: UIPageViewController, viewControllerAfterViewController viewController: UIViewController) -> UIViewController? {
-        
-        var index = (viewController as! StatContentViewController).index
-        index++
-        
-        if index >= titles.count { return nil }
-        
-        return viewControllerAtIndex(index)
-    }
-    
-    func pageViewController(pageViewController: UIPageViewController, viewControllerBeforeViewController viewController: UIViewController) -> UIViewController? {
-        
-        var index = (viewController as! StatContentViewController).index
-        index--
-        
-        if index < 0 { return nil }
-        
-        return viewControllerAtIndex(index)
-    }
-    
-    func viewControllerAtIndex(index : Int) -> UIViewController? {
-        if (titles.count == 0) || (index >= titles.count) {
-            return nil
+    func locationManager(manager: CLLocationManager!, didUpdateLocations locations: [AnyObject]!) {
+        if let loc = locations.last as? CLLocation {
+            lastLocation = loc
+            tableView.reloadData()
         }
-        
-        let contentVC = storyboard?.instantiateViewControllerWithIdentifier("statContent") as! StatContentViewController
-        contentVC.loadView()
-        
-        contentVC.lblTitle.text = self.titles[index]
-        contentVC.index = index
-        
-        return contentVC
     }
     
-    func presentationCountForPageViewController(pageViewController: UIPageViewController) -> Int {
-        return titles.count
-    }
-    
-    func presentationIndexForPageViewController(pageViewController: UIPageViewController) -> Int {
-        return 0
-    }
-}
-
-class StatContentViewController: UIViewController {
-    
-    @IBOutlet weak var lblTitle: UILabel!
-    
-    
-    var index = 0
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
+    func changedLocationAccuracy(index: Int) {
+        if index == 0 {
+            locationManager.desiredAccuracy = kCLLocationAccuracyThreeKilometers
+        }
+        else if index == 1 {
+            locationManager.desiredAccuracy = kCLLocationAccuracyKilometer
+        }
+        else if index == 2 {
+            locationManager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
+        }
+        else if index == 3 {
+            locationManager.desiredAccuracy = kCLLocationAccuracyBest
+        }
+        else if index == 4 {
+            locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
+        }
     }
 }
 
-class MainViewController: UIViewController, CLLocationManagerDelegate {
+class StatViewController: UIViewController, StatContentDelegate {
     
-    var statTableView: StatTableViewController!
-    
-    let locationManager = CLLocationManager()
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        // Initialize the location manager
-        
-    }
-    
-    override func prefersStatusBarHidden() -> Bool {
-        return true;
-    }
+    var statTable: StatTableViewController!
+    var statDetail: StatPageViewController!
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         if segue.identifier == "embedStats" {
-            statTableView = segue.destinationViewController as! StatTableViewController
-            
-            statTableView.locationManager = locationManager
+            if let vc = segue.destinationViewController as? StatTableViewController {
+                statTable = vc
+            }
         }
+        else if segue.identifier == "embedDetail" {
+            if let vc = segue.destinationViewController as? StatPageViewController {
+                statDetail = vc
+                statDetail.parent = self
+            }
+        }
+    }
+    
+    func changedLocationAccuracy(index: Int) {
+        statTable.changedLocationAccuracy(index)
     }
 }
 
