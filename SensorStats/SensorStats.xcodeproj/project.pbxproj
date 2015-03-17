@@ -27,6 +27,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0A1D08441AB7C8D50081A37B /* SSPlayground.playground */ = {isa = PBXFileReference; lastKnownFileType = file.playground; path = SSPlayground.playground; sourceTree = "<group>"; };
 		75A5942F1AA40C8200EBE2DA /* SensorStats.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SensorStats.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		75A594331AA40C8200EBE2DA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		75A594341AA40C8200EBE2DA /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -83,6 +84,7 @@
 				75A594341AA40C8200EBE2DA /* AppDelegate.swift */,
 				75A594391AA40C8200EBE2DA /* MainViewController.swift */,
 				75A5943B1AA40C8200EBE2DA /* Main.storyboard */,
+				0A1D08441AB7C8D50081A37B /* SSPlayground.playground */,
 				75A5943E1AA40C8200EBE2DA /* Images.xcassets */,
 				75A594401AA40C8200EBE2DA /* LaunchScreen.xib */,
 				75A594321AA40C8200EBE2DA /* Supporting Files */,
