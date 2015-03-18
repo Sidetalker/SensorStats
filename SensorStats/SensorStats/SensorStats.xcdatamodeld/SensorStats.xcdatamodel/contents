@@ -20,10 +20,10 @@
     <entity name="Session" representedClassName="SensorStats.Session" syncable="YES">
         <attribute name="date" optional="YES" attributeType="Date" syncable="YES"/>
         <attribute name="name" optional="YES" attributeType="String" syncable="YES"/>
-        <relationship name="data" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="DataEntry" inverseName="session" inverseEntity="DataEntry" syncable="YES"/>
+        <relationship name="data" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="DataEntry" inverseName="session" inverseEntity="DataEntry" syncable="YES"/>
     </entity>
     <elements>
-        <element name="Session" positionX="-63" positionY="-18" width="128" height="90"/>
-        <element name="DataEntry" positionX="-36" positionY="27" width="128" height="270"/>
+        <element name="DataEntry" positionX="117" positionY="-18" width="128" height="270"/>
+        <element name="Session" positionX="-63" positionY="-18" width="128" height="88"/>
     </elements>
 </model>

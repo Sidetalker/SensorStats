@@ -37,3 +37,8 @@ func save() {
         println(error?.localizedDescription)
     }
 }
+
+// Rolls back any unsaved changes
+func rollback() {
+    managedObjectContext!.rollback()
+}

@@ -358,6 +358,7 @@ class StatViewController: UIViewController, StatContentDelegate, PagerDelegate {
     
     var recording = false
     var timer: NSTimer?
+    var session: Session?
     var data = Array<DataEntry>()
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
@@ -383,9 +384,38 @@ class StatViewController: UIViewController, StatContentDelegate, PagerDelegate {
         
         // Start or stop recording as needed
         if !recording {
-           timer = NSTimer.scheduledTimerWithTimeInterval(0.333, target: self, selector: Selector("saveLatest"), userInfo: nil, repeats: true)
+            session = insertObject("Session") as? Session
+            
+            data.removeAll(keepCapacity: false)
+            
+            session!.date = NSDate()
+            
+            timer = NSTimer.scheduledTimerWithTimeInterval(0.333, target: self, selector: Selector("saveLatest"), userInfo: nil, repeats: true)
         }
         else {
+            let nameChanger = UIAlertController(title: "Name Your Session", message: "Enter a name for your new session", preferredStyle: UIAlertControllerStyle.Alert)
+            
+            nameChanger.addTextFieldWithConfigurationHandler { (textField) in
+                textField.placeholder = "Session Name"
+            }
+            
+            let ok = UIAlertAction(title: "OK", style: UIAlertActionStyle.Default, handler: { (_) in
+                let nameField = nameChanger.textFields![0] as! UITextField
+                
+                self.session?.name = nameField.text
+                
+                save()
+            })
+            
+            let discard = UIAlertAction(title: "Discard", style: UIAlertActionStyle.Destructive, handler: { (_) in
+                rollback()
+            })
+            
+            nameChanger.addAction(ok)
+            nameChanger.addAction(discard)
+            
+            self.presentViewController(nameChanger, animated: true, completion: nil)
+            
             timer?.invalidate()
         }
         
@@ -407,35 +437,46 @@ class StatViewController: UIViewController, StatContentDelegate, PagerDelegate {
     }
     
     func saveLatest() {
-        var dataEntry = DataEntry()
+        var dataEntry = insertObject("DataEntry") as! DataEntry
         
         let curLoc = statTable.lastLocation
         let curAcc = statTable.lastAcc
         let curGyro = statTable.lastGyro
         
         if let acc = curAcc?.acceleration {
-            dataEntry.accX = acc.x
-            dataEntry.accY = acc.y
-            dataEntry.accZ = acc.z
+            dataEntry.accX = NSNumber(double: acc.x)
+            dataEntry.accY = NSNumber(double: acc.y)
+            dataEntry.accZ = NSNumber(double: acc.z)
         }
         
         if let gyro = curGyro?.rotationRate {
-            dataEntry.gyroX = gyro.x
-            dataEntry.gyroY = gyro.y
-            dataEntry.gyroZ = gyro.z
+            dataEntry.gyroX = NSNumber(double: gyro.x)
+            dataEntry.gyroY = NSNumber(double: gyro.y)
+            dataEntry.gyroZ = NSNumber(double: gyro.z)
         }
         
         if let loc = curLoc {
-            dataEntry.altitude = loc.altitude
-            dataEntry.course = loc.course
-            dataEntry.lat = loc.coordinate.latitude
-            dataEntry.long = loc.coordinate.longitude
-            dataEntry.horizAcc = loc.horizontalAccuracy
-            dataEntry.verAcc = loc.altitude
-            dataEntry.altitude = loc.altitude
-            dataEntry.altitude = loc.altitude
-            dataEntry.altitude = loc.altitude
+            dataEntry.altitude = NSNumber(double: loc.altitude)
+            dataEntry.course = NSNumber(double: loc.course)
+            dataEntry.lat = NSNumber(double: loc.coordinate.latitude)
+            dataEntry.long = NSNumber(double: loc.coordinate.longitude)
+            dataEntry.horizAcc = NSNumber(double: loc.horizontalAccuracy)
+            dataEntry.verAcc = NSNumber(double: loc.verticalAccuracy)
+            dataEntry.speed = NSNumber(double: loc.speed)
+            dataEntry.floor = NSNumber(integer: loc.floor.level)
         }
+        
+        // Add to our current session
+        if let curSesh = session {
+            var mutableData = NSMutableOrderedSet(orderedSet: session!.data)
+            mutableData.addObject(dataEntry)
+            
+            curSesh.data = NSOrderedSet(orderedSet: mutableData)
+            data.append(dataEntry)
+        }
+        
+        self.btnRecordSave.setTitle("Save \(data.count) entries", forState: UIControlState.Normal)
+        self.btnRecordSave.setTitle("Save \(data.count) entries", forState: UIControlState.Highlighted)
     }
     
     func changedLocationAccuracy(index: Int) {
