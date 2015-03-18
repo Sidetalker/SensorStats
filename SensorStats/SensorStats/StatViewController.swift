@@ -12,50 +12,97 @@ import CoreMotion
 
 protocol StatContentDelegate {
     func changedLocationAccuracy(index: Int)
+    func changedGyroRefresh(rate: NSTimeInterval)
+    func changeAccRefresh(rate: NSTimeInterval)
+}
+
+protocol PagerDelegate {
+    func changedPage(index: Int)
 }
 
 class StatPageViewController: UIPageViewController, UIPageViewControllerDataSource, UIPageViewControllerDelegate {
     
     var parent: StatViewController!
+    var swipeDelegate: PagerDelegate?
     
-    let storyboardIDs = ["gpsPage"]
+    var vcA: StatGPSContentViewController!
+    var vcB: StatMotionContentViewController!
+    var vcC: StatMotionContentViewController!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        swipeDelegate = parent
+        
         self.dataSource = self
         self.delegate = self
         
-        let initialVC = storyboard?.instantiateViewControllerWithIdentifier("gpsPage") as! StatGPSContentViewController
-        initialVC.delegate = parent
+        vcA = storyboard?.instantiateViewControllerWithIdentifier("gpsPage") as! StatGPSContentViewController
+        vcA.delegate = parent
+        vcA.index = 0
         
-        self.setViewControllers([initialVC], direction: UIPageViewControllerNavigationDirection.Forward, animated: false, completion: nil)
+        vcB = storyboard?.instantiateViewControllerWithIdentifier("motionPage") as! StatMotionContentViewController
+        vcB.delegate = parent
+        vcB.index = 1
+        vcB.displayType = 0
+        vcB.loadView()
+        vcB.initialize()
+        
+        vcC = storyboard?.instantiateViewControllerWithIdentifier("motionPage") as! StatMotionContentViewController
+        vcC.delegate = parent
+        vcC.index = 2
+        vcC.displayType = 1
+        vcC.loadView()
+        vcC.initialize()
+        
+        self.setViewControllers([vcA], direction: UIPageViewControllerNavigationDirection.Forward, animated: false, completion: nil)
     }
     
     func pageViewController(pageViewController: UIPageViewController, viewControllerAfterViewController viewController: UIViewController) -> UIViewController? {
+        if viewController.isEqual(vcA) { return vcB }
+        if viewController.isEqual(vcB) { return vcC }
         
-        var index = (viewController as! StatGPSContentViewController).index
-        index++
-        
-        if index >= storyboardIDs.count { return nil }
-        
-        return viewControllerAtIndex(index)
+        return nil
     }
     
     func pageViewController(pageViewController: UIPageViewController, viewControllerBeforeViewController viewController: UIViewController) -> UIViewController? {
+        if viewController.isEqual(vcB) { return vcA }
+        if viewController.isEqual(vcC) { return vcB }
         
-        var index = (viewController as! StatGPSContentViewController).index
-        index--
-        
-        if index < 0 { return nil }
-        
-        return viewControllerAtIndex(index)
+        return nil
+    }
+    
+    func pageViewController(pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [AnyObject], transitionCompleted completed: Bool) {
+        if completed {
+            var index = -1
+            
+            if let vc = self.viewControllers[0] as? StatGPSContentViewController {
+                index = vc.index
+            }
+            else if let vc = self.viewControllers[0] as? StatMotionContentViewController {
+                index = vc.index
+            }
+            
+            swipeDelegate?.changedPage(index)
+        }
     }
     
     func viewControllerAtIndex(index : Int) -> UIViewController? {
         if index == 0 {
             if let contentVC = storyboard?.instantiateViewControllerWithIdentifier("gpsPage") as? StatGPSContentViewController {
                 contentVC.delegate = parent
+                contentVC.index = 0
+                
+                return contentVC
+            }
+        }
+        else if index == 1 || index == 2 {
+            if let contentVC = storyboard?.instantiateViewControllerWithIdentifier("motionPage") as? StatMotionContentViewController {
+                contentVC.delegate = parent
+                contentVC.displayType = index == 1 ? 0 : 1
+                contentVC.index = index - 1
+                contentVC.loadView()
+                contentVC.initialize()
                 
                 return contentVC
             }
@@ -65,7 +112,7 @@ class StatPageViewController: UIPageViewController, UIPageViewControllerDataSour
     }
     
     func presentationCountForPageViewController(pageViewController: UIPageViewController) -> Int {
-        return storyboardIDs.count
+        return 3
     }
     
     func presentationIndexForPageViewController(pageViewController: UIPageViewController) -> Int {
@@ -89,11 +136,36 @@ class StatGPSContentViewController: UIViewController {
     }
 }
 
-class StatTableViewController: UITableViewController, CLLocationManagerDelegate {
+class StatMotionContentViewController: UIViewController {
+    
+    @IBOutlet weak var lblTitle: UILabel!
+    
+    var delegate: StatContentDelegate?
+    
+    var gyroUpdateInterval: NSTimeInterval = 0.1
+    var accUpdateInterval: NSTimeInterval = 0.1
+    var displayType = 0
+    var index = 0
+    
+    func initialize() {
+        lblTitle.text = displayType == 0 ? "Accelerometer" : "Gyroscope"
+    }
+    
+    @IBAction func stepperChanged(sender: AnyObject) {
+        
+    }
+}
+
+class StatTableViewController: UITableViewController, CLLocationManagerDelegate, PagerDelegate {
     
     var locationManager = CLLocationManager()
     var motionManager = CMMotionManager()
+    
     var lastLocation = CLLocation()
+    var lastGyro: CMGyroData?
+    var lastAcc: CMAccelerometerData?
+    
+    var displayMode = 0
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -118,7 +190,8 @@ class StatTableViewController: UITableViewController, CLLocationManagerDelegate 
             
             if (error != nil) { println("Error: \(error)") }
             
-            println(data)
+            self.lastGyro = data
+            self.tableView.reloadData()
         }
         
         motionManager.startAccelerometerUpdatesToQueue(accQueue) {
@@ -126,7 +199,8 @@ class StatTableViewController: UITableViewController, CLLocationManagerDelegate 
             
             if (error != nil) { println("Error: \(error)") }
             
-            println(data)
+            self.lastAcc = data
+            self.tableView.reloadData()
         }
     }
     
@@ -135,25 +209,22 @@ class StatTableViewController: UITableViewController, CLLocationManagerDelegate 
     }
     
     override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if section == 0 {
-            return 8
-        }
-        
-        return 0
+        if displayMode == 0 { return 8 }
+        else                { return 3 }
     }
     
     override func tableView(tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        if section == 0 {
-            return "GPS"
-        }
+        if displayMode == 0 { return "GPS" }
+        if displayMode == 1 { return "Accelerometer" }
+        if displayMode == 2 { return "Gyroscope" }
         
         return "ERROR"
     }
     
     override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        if indexPath.section == 0 {
-            var cell = tableView.dequeueReusableCellWithIdentifier("statCell") as! UITableViewCell
-            
+        var cell = tableView.dequeueReusableCellWithIdentifier("statCell") as! UITableViewCell
+        
+        if displayMode == 0 {
             if indexPath.row == 0 {
                 cell.textLabel?.text = "Latitude"
                 cell.detailTextLabel?.text = "\(lastLocation.coordinate.latitude) degrees"
@@ -186,11 +257,49 @@ class StatTableViewController: UITableViewController, CLLocationManagerDelegate 
                 cell.textLabel?.text = "Course"
                 cell.detailTextLabel?.text = "\(lastLocation.course) degrees"
             }
-            
-            return cell
+        }
+        else if displayMode == 1 {
+            if let acc = lastAcc?.acceleration {
+                if indexPath.row == 0 {
+                    cell.textLabel?.text = "X Acceleration"
+                    cell.detailTextLabel?.text = "\(acc.x)"
+                }
+                else if indexPath.row == 1 {
+                    cell.textLabel?.text = "Y Acceleration"
+                    cell.detailTextLabel?.text = "\(acc.y)"
+                }
+                else if indexPath.row == 2 {
+                    cell.textLabel?.text = "Z Acceleration"
+                    cell.detailTextLabel?.text = "\(acc.z)"
+                }
+            }
+            else {
+                cell.textLabel?.text = "Error"
+                cell.detailTextLabel?.text = "No Acceleration Data"
+            }
+        }
+        else if displayMode == 2 {
+            if let gyro = lastGyro?.rotationRate {
+                if indexPath.row == 0 {
+                    cell.textLabel?.text = "X Rotation Rate"
+                    cell.detailTextLabel?.text = "\(gyro.x)"
+                }
+                else if indexPath.row == 1 {
+                    cell.textLabel?.text = "Y Rotation Rate"
+                    cell.detailTextLabel?.text = "\(gyro.y)"
+                }
+                else if indexPath.row == 2 {
+                    cell.textLabel?.text = "Z Rotation Rate"
+                    cell.detailTextLabel?.text = "\(gyro.z)"
+                }
+            }
+            else {
+                cell.textLabel?.text = "Error"
+                cell.detailTextLabel?.text = "No Gyroscope Data"
+            }
         }
         
-        return UITableViewCell()
+        return cell
     }
     
     override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
@@ -221,9 +330,32 @@ class StatTableViewController: UITableViewController, CLLocationManagerDelegate 
             locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
         }
     }
+    
+    func changedPage(index: Int) {
+        let animationA = index > displayMode ? UITableViewRowAnimation.Left : UITableViewRowAnimation.Right
+        let animationB = index < displayMode ? UITableViewRowAnimation.Left : UITableViewRowAnimation.Right
+        
+        tableView.beginUpdates()
+        
+        displayMode = index
+        
+        tableView.deleteSections(NSIndexSet(index: 0), withRowAnimation: animationA)
+        tableView.insertSections(NSIndexSet(index: 0), withRowAnimation: animationB)
+        
+        var inserts = [NSIndexPath(forRow: 0, inSection: 0)]
+        var count = displayMode == 0 ? 7 : 2
+        
+        for i in 1...count {
+            inserts.append(NSIndexPath(forRow: i, inSection: 0))
+        }
+        
+        tableView.insertRowsAtIndexPaths(inserts, withRowAnimation: animationB)
+        
+        tableView.endUpdates()
+    }
 }
 
-class StatViewController: UIViewController, StatContentDelegate {
+class StatViewController: UIViewController, StatContentDelegate, PagerDelegate {
     
     var statTable: StatTableViewController!
     var statDetail: StatPageViewController!
@@ -244,6 +376,18 @@ class StatViewController: UIViewController, StatContentDelegate {
     
     func changedLocationAccuracy(index: Int) {
         statTable.changedLocationAccuracy(index)
+    }
+    
+    func changeAccRefresh(rate: NSTimeInterval) {
+        statTable.motionManager.accelerometerUpdateInterval = rate
+    }
+    
+    func changedGyroRefresh(rate: NSTimeInterval) {
+        statTable.motionManager.gyroUpdateInterval = rate
+    }
+    
+    func changedPage(index: Int) {
+        statTable.changedPage(index)
     }
 }
 
