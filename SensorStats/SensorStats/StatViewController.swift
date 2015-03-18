@@ -89,23 +89,10 @@ class StatPageViewController: UIPageViewController, UIPageViewControllerDataSour
     
     func viewControllerAtIndex(index : Int) -> UIViewController? {
         if index == 0 {
-            if let contentVC = storyboard?.instantiateViewControllerWithIdentifier("gpsPage") as? StatGPSContentViewController {
-                contentVC.delegate = parent
-                contentVC.index = 0
-                
-                return contentVC
-            }
+            return vcA
         }
         else if index == 1 || index == 2 {
-            if let contentVC = storyboard?.instantiateViewControllerWithIdentifier("motionPage") as? StatMotionContentViewController {
-                contentVC.delegate = parent
-                contentVC.displayType = index == 1 ? 0 : 1
-                contentVC.index = index - 1
-                contentVC.loadView()
-                contentVC.initialize()
-                
-                return contentVC
-            }
+            return index == 1 ? vcB : vcA
         }
         
         return nil
@@ -113,10 +100,6 @@ class StatPageViewController: UIPageViewController, UIPageViewControllerDataSour
     
     func presentationCountForPageViewController(pageViewController: UIPageViewController) -> Int {
         return 3
-    }
-    
-    func presentationIndexForPageViewController(pageViewController: UIPageViewController) -> Int {
-        return 0
     }
 }
 
@@ -139,6 +122,7 @@ class StatGPSContentViewController: UIViewController {
 class StatMotionContentViewController: UIViewController {
     
     @IBOutlet weak var lblTitle: UILabel!
+    @IBOutlet weak var lblInfo: UILabel!
     
     var delegate: StatContentDelegate?
     
@@ -152,7 +136,11 @@ class StatMotionContentViewController: UIViewController {
     }
     
     @IBAction func stepperChanged(sender: AnyObject) {
-        
+        if let stepper = sender as? UIStepper {
+            lblInfo.text = "Capture Rate: \(stepper.value)/sec"
+            
+            displayType == 0 ? delegate?.changeAccRefresh(stepper.value) : delegate?.changedGyroRefresh(stepper.value)
+        }
     }
 }
 
@@ -161,7 +149,7 @@ class StatTableViewController: UITableViewController, CLLocationManagerDelegate,
     var locationManager = CLLocationManager()
     var motionManager = CMMotionManager()
     
-    var lastLocation = CLLocation()
+    var lastLocation: CLLocation?
     var lastGyro: CMGyroData?
     var lastAcc: CMAccelerometerData?
     
@@ -225,37 +213,43 @@ class StatTableViewController: UITableViewController, CLLocationManagerDelegate,
         var cell = tableView.dequeueReusableCellWithIdentifier("statCell") as! UITableViewCell
         
         if displayMode == 0 {
-            if indexPath.row == 0 {
-                cell.textLabel?.text = "Latitude"
-                cell.detailTextLabel?.text = "\(lastLocation.coordinate.latitude) degrees"
+            if let loc = lastLocation {
+                if indexPath.row == 0 {
+                    cell.textLabel?.text = "Latitude"
+                    cell.detailTextLabel?.text = "\(loc.coordinate.latitude) degrees"
+                }
+                else if indexPath.row == 1 {
+                    cell.textLabel?.text = "Longitude"
+                    cell.detailTextLabel?.text = "\(loc.coordinate.longitude) degrees"
+                }
+                else if indexPath.row == 2 {
+                    cell.textLabel?.text = "Altitude"
+                    cell.detailTextLabel?.text = "\(loc.altitude) meters"
+                }
+                else if indexPath.row == 3 {
+                    cell.textLabel?.text = "Floor"
+                    cell.detailTextLabel?.text = "\(loc.floor.level)"
+                }
+                else if indexPath.row == 4 {
+                    cell.textLabel?.text = "Horizontal Accuracy"
+                    cell.detailTextLabel?.text = "within \(loc.horizontalAccuracy) meters"
+                }
+                else if indexPath.row == 5 {
+                    cell.textLabel?.text = "Vertical Accuracy"
+                    cell.detailTextLabel?.text = "within \(loc.verticalAccuracy) meters"
+                }
+                else if indexPath.row == 6 {
+                    cell.textLabel?.text = "Speed"
+                    cell.detailTextLabel?.text = "\(loc.speed) m/s?"
+                }
+                else if indexPath.row == 7 {
+                    cell.textLabel?.text = "Course"
+                    cell.detailTextLabel?.text = "\(loc.course) degrees"
+                }
             }
-            else if indexPath.row == 1 {
-                cell.textLabel?.text = "Longitude"
-                cell.detailTextLabel?.text = "\(lastLocation.coordinate.longitude) degrees"
-            }
-            else if indexPath.row == 2 {
-                cell.textLabel?.text = "Altitude"
-                cell.detailTextLabel?.text = "\(lastLocation.altitude) meters"
-            }
-            else if indexPath.row == 3 {
-                cell.textLabel?.text = "Floor"
-                cell.detailTextLabel?.text = "\(lastLocation.altitude)"
-            }
-            else if indexPath.row == 4 {
-                cell.textLabel?.text = "Horizontal Accuracy"
-                cell.detailTextLabel?.text = "within \(lastLocation.horizontalAccuracy) meters"
-            }
-            else if indexPath.row == 5 {
-                cell.textLabel?.text = "Vertical Accuracy"
-                cell.detailTextLabel?.text = "within \(lastLocation.verticalAccuracy) meters"
-            }
-            else if indexPath.row == 6 {
-                cell.textLabel?.text = "Speed"
-                cell.detailTextLabel?.text = "\(lastLocation.speed) m/s?"
-            }
-            else if indexPath.row == 7 {
-                cell.textLabel?.text = "Course"
-                cell.detailTextLabel?.text = "\(lastLocation.course) degrees"
+            else {
+                cell.textLabel?.text = "Error"
+                cell.detailTextLabel?.text = "No Location Data"
             }
         }
         else if displayMode == 1 {
@@ -357,8 +351,14 @@ class StatTableViewController: UITableViewController, CLLocationManagerDelegate,
 
 class StatViewController: UIViewController, StatContentDelegate, PagerDelegate {
     
+    @IBOutlet weak var btnRecordSave: UIButton!
+    
     var statTable: StatTableViewController!
     var statDetail: StatPageViewController!
+    
+    var recording = false
+    var timer: NSTimer?
+    var data = Array<DataEntry>()
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         if segue.identifier == "embedStats" {
@@ -374,16 +374,80 @@ class StatViewController: UIViewController, StatContentDelegate, PagerDelegate {
         }
     }
     
+    @IBAction func fireRecordSave(sender: AnyObject) {
+        let curFrame = btnRecordSave.frame
+        let curLoc = curFrame.origin
+        let curSize = curFrame.size
+        
+        let newLoc = CGPoint(x: curLoc.x, y: curLoc.y + curSize.height)
+        
+        // Start or stop recording as needed
+        if !recording {
+           timer = NSTimer.scheduledTimerWithTimeInterval(0.333, target: self, selector: Selector("saveLatest"), userInfo: nil, repeats: true)
+        }
+        else {
+            timer?.invalidate()
+        }
+        
+        // Animate the button transition
+        UIView.animateWithDuration(0.3, delay: 0.0, options: nil, animations: {
+            self.btnRecordSave.frame = CGRect(origin: newLoc, size: curSize)
+            }, completion: { (value: Bool) in
+                self.btnRecordSave.backgroundColor = self.recording ? UIColor.greenColor() : UIColor.redColor()
+                self.btnRecordSave.setTitle(self.recording ? "Save" : "Record", forState: UIControlState.Normal)
+                self.btnRecordSave.setTitle(self.recording ? "Save" : "Record", forState: UIControlState.Highlighted)
+        })
+        
+        UIView.animateWithDuration(0.5, delay: 0.32, usingSpringWithDamping: 0.52, initialSpringVelocity: 0.0, options: nil, animations: {
+            self.btnRecordSave.frame = curFrame
+            }, completion: nil)
+        
+        // Flip the recording toggle
+        recording = !recording
+    }
+    
+    func saveLatest() {
+        var dataEntry = DataEntry()
+        
+        let curLoc = statTable.lastLocation
+        let curAcc = statTable.lastAcc
+        let curGyro = statTable.lastGyro
+        
+        if let acc = curAcc?.acceleration {
+            dataEntry.accX = acc.x
+            dataEntry.accY = acc.y
+            dataEntry.accZ = acc.z
+        }
+        
+        if let gyro = curGyro?.rotationRate {
+            dataEntry.gyroX = gyro.x
+            dataEntry.gyroY = gyro.y
+            dataEntry.gyroZ = gyro.z
+        }
+        
+        if let loc = curLoc {
+            dataEntry.altitude = loc.altitude
+            dataEntry.course = loc.course
+            dataEntry.lat = loc.coordinate.latitude
+            dataEntry.long = loc.coordinate.longitude
+            dataEntry.horizAcc = loc.horizontalAccuracy
+            dataEntry.verAcc = loc.altitude
+            dataEntry.altitude = loc.altitude
+            dataEntry.altitude = loc.altitude
+            dataEntry.altitude = loc.altitude
+        }
+    }
+    
     func changedLocationAccuracy(index: Int) {
         statTable.changedLocationAccuracy(index)
     }
     
     func changeAccRefresh(rate: NSTimeInterval) {
-        statTable.motionManager.accelerometerUpdateInterval = rate
+        statTable.motionManager.accelerometerUpdateInterval = 1 / rate
     }
     
     func changedGyroRefresh(rate: NSTimeInterval) {
-        statTable.motionManager.gyroUpdateInterval = rate
+        statTable.motionManager.gyroUpdateInterval = 1 / rate
     }
     
     func changedPage(index: Int) {

@@ -40,6 +40,9 @@
                                 <state key="normal" title="Record">
                                     <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                                 </state>
+                                <connections>
+                                    <action selector="fireRecordSave:" destination="BYZ-38-t0r" eventType="touchUpInside" id="liq-gG-GKT"/>
+                                </connections>
                             </button>
                         </subviews>
                         <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
@@ -58,6 +61,9 @@
                             <constraint firstItem="wfy-db-euE" firstAttribute="top" secondItem="rrz-6a-QIA" secondAttribute="bottom" id="xbn-zS-0k1"/>
                         </constraints>
                     </view>
+                    <connections>
+                        <outlet property="btnRecordSave" destination="rrz-6a-QIA" id="uqJ-g1-AHp"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
@@ -101,7 +107,7 @@
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Jpl-Yw-15M" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1175" y="196"/>
+            <point key="canvasLocation" x="1175" y="274"/>
         </scene>
         <!--Stat Page View Controller-->
         <scene sceneID="ps9-MW-5Qe">
@@ -155,7 +161,8 @@
                     <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
                     <size key="freeformSize" width="500" height="150"/>
                     <connections>
-                        <outlet property="lblTitle" destination="mkM-sU-zVO" id="Z2s-bK-XDj"/>
+                        <outlet property="lblInfo" destination="I5R-0x-F9G" id="XyR-cb-aMw"/>
+                        <outlet property="lblTitle" destination="mkM-sU-zVO" id="1T5-kG-ChI"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="aAY-ba-3a8" userLabel="First Responder" sceneMemberID="firstResponder"/>
