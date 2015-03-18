@@ -228,7 +228,9 @@ class StatTableViewController: UITableViewController, CLLocationManagerDelegate,
                 }
                 else if indexPath.row == 3 {
                     cell.textLabel?.text = "Floor"
-                    cell.detailTextLabel?.text = "\(loc.floor.level)"
+                    if let floor = loc.floor {
+                        cell.detailTextLabel?.text = "\(floor.level)"
+                    }
                 }
                 else if indexPath.row == 4 {
                     cell.textLabel?.text = "Horizontal Accuracy"
@@ -399,7 +401,7 @@ class StatViewController: UIViewController, StatContentDelegate, PagerDelegate {
                 textField.placeholder = "Session Name"
             }
             
-            let ok = UIAlertAction(title: "OK", style: UIAlertActionStyle.Default, handler: { (_) in
+            let save = UIAlertAction(title: "Save", style: UIAlertActionStyle.Default, handler: { (_) in
                 let nameField = nameChanger.textFields![0] as! UITextField
                 
                 self.session?.name = nameField.text
@@ -411,8 +413,8 @@ class StatViewController: UIViewController, StatContentDelegate, PagerDelegate {
                 rollback()
             })
             
-            nameChanger.addAction(ok)
             nameChanger.addAction(discard)
+            nameChanger.addAction(save)
             
             self.presentViewController(nameChanger, animated: true, completion: nil)
             
@@ -463,7 +465,10 @@ class StatViewController: UIViewController, StatContentDelegate, PagerDelegate {
             dataEntry.horizAcc = NSNumber(double: loc.horizontalAccuracy)
             dataEntry.verAcc = NSNumber(double: loc.verticalAccuracy)
             dataEntry.speed = NSNumber(double: loc.speed)
-            dataEntry.floor = NSNumber(integer: loc.floor.level)
+            
+            if let floor = loc.floor {
+                dataEntry.floor = NSNumber(integer: floor.level)
+            }
         }
         
         // Add to our current session
