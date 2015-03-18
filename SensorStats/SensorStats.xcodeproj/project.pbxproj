@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		75A594351AA40C8200EBE2DA /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75A594341AA40C8200EBE2DA /* AppDelegate.swift */; };
 		75A594381AA40C8200EBE2DA /* SensorStats.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 75A594361AA40C8200EBE2DA /* SensorStats.xcdatamodeld */; };
-		75A5943A1AA40C8200EBE2DA /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75A594391AA40C8200EBE2DA /* MainViewController.swift */; };
+		75A5943A1AA40C8200EBE2DA /* StatViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75A594391AA40C8200EBE2DA /* StatViewController.swift */; };
 		75A5943D1AA40C8200EBE2DA /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 75A5943B1AA40C8200EBE2DA /* Main.storyboard */; };
 		75A5943F1AA40C8200EBE2DA /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 75A5943E1AA40C8200EBE2DA /* Images.xcassets */; };
 		75A594421AA40C8200EBE2DA /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 75A594401AA40C8200EBE2DA /* LaunchScreen.xib */; };
@@ -32,7 +32,7 @@
 		75A594331AA40C8200EBE2DA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		75A594341AA40C8200EBE2DA /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		75A594371AA40C8200EBE2DA /* SensorStats.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = SensorStats.xcdatamodel; sourceTree = "<group>"; };
-		75A594391AA40C8200EBE2DA /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
+		75A594391AA40C8200EBE2DA /* StatViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatViewController.swift; sourceTree = "<group>"; };
 		75A5943C1AA40C8200EBE2DA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		75A5943E1AA40C8200EBE2DA /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		75A594411AA40C8200EBE2DA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
@@ -82,7 +82,7 @@
 			children = (
 				75A594361AA40C8200EBE2DA /* SensorStats.xcdatamodeld */,
 				75A594341AA40C8200EBE2DA /* AppDelegate.swift */,
-				75A594391AA40C8200EBE2DA /* MainViewController.swift */,
+				75A594391AA40C8200EBE2DA /* StatViewController.swift */,
 				75A5943B1AA40C8200EBE2DA /* Main.storyboard */,
 				0A1D08441AB7C8D50081A37B /* SSPlayground.playground */,
 				75A5943E1AA40C8200EBE2DA /* Images.xcassets */,
@@ -166,6 +166,7 @@
 				TargetAttributes = {
 					75A5942E1AA40C8200EBE2DA = {
 						CreatedOnToolsVersion = 6.1.1;
+						DevelopmentTeam = S7BT87895F;
 					};
 					75A594461AA40C8200EBE2DA = {
 						CreatedOnToolsVersion = 6.1.1;
@@ -217,7 +218,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				75A5943A1AA40C8200EBE2DA /* MainViewController.swift in Sources */,
+				75A5943A1AA40C8200EBE2DA /* StatViewController.swift in Sources */,
 				75A594351AA40C8200EBE2DA /* AppDelegate.swift in Sources */,
 				75A594381AA40C8200EBE2DA /* SensorStats.xcdatamodeld in Sources */,
 			);
@@ -345,9 +346,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = SensorStats/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
@@ -356,9 +361,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = SensorStats/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
